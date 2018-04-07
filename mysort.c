@@ -7,14 +7,15 @@
 /* VARIABLES */
 char *mysort;
 const char *OPTSTRING = "r";
+const int BUFFER_SIZE = 1022;
 int lineCounter = 0; //struct icine alinacak!
 
 /* PROTOTYPES */
 void usage(void);
 char **getFilePaths(char **argv, int optind, const int numberOfPaths);
 char **readLines(char **paths, const int numberOfPaths);
-
 int myCompare(const void *a, const void *b);
+void printArray(char** arr, const int size, const int isReverse);
 
 int main(int argc, char **argv)
 {
@@ -26,6 +27,7 @@ int main(int argc, char **argv)
         {
         case 'r':
             opt_r++;
+            printf("R : %d\n", opt_r);
             break;
         default:
             usage();
@@ -41,10 +43,7 @@ int main(int argc, char **argv)
         {
             char **lines = readLines(filePaths, numberOfPaths);
             qsort(lines, lineCounter, sizeof(char *), myCompare);
-            for (int i = 0; i < lineCounter; i++)
-            {
-                printf("%s\n", lines[i]);
-            }
+            printArray(lines, lineCounter, opt_r);
         }
     }
     else
@@ -96,7 +95,6 @@ char **readLines(char **paths, const int numberOfPaths)
 
     char **lines = malloc(numberOfPaths * sizeof(char *));
     //char **lines = NULL;
-    const int NR_OF_CHARS_TO_READ = 1022;
     for (int i = 0; i < numberOfPaths; ++i)
     {
         FILE *file;
@@ -106,8 +104,8 @@ char **readLines(char **paths, const int numberOfPaths)
             exit(EXIT_FAILURE);
         }
 
-        char *buff = malloc(NR_OF_CHARS_TO_READ);
-        while (feof(file) || (buff = fgets(buff, NR_OF_CHARS_TO_READ, file)) != NULL)
+        char *buff = malloc(BUFFER_SIZE);
+        while (feof(file) || (buff = fgets(buff, BUFFER_SIZE, file)) != NULL)
         {
 
             if (!feof(file))
@@ -116,8 +114,8 @@ char **readLines(char **paths, const int numberOfPaths)
                 buff[lastChar] = '\0'; //satir bitti
             }
 
-            lines[lineCounter] = malloc(NR_OF_CHARS_TO_READ);       //lines'a yeni malloc
-            strncpy(lines[lineCounter], buff, NR_OF_CHARS_TO_READ); //line -> lines
+            lines[lineCounter] = malloc(BUFFER_SIZE);       //lines'a yeni malloc
+            strncpy(lines[lineCounter], buff, BUFFER_SIZE); //line -> lines
             lineCounter++;
 
             if (feof(file))
@@ -136,6 +134,22 @@ int myCompare(const void *a, const void *b)
     const char *pb = *(const char **)b;
 
     return strcmp(pa, pb);
+}
+
+void printArray(char** arr, const int size, const int isReverse){
+    if(isReverse){
+        for (int i = size-1; i >= 0; i--)
+        {
+            printf("%s\n", arr[i]);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < size; i++)
+        {
+            printf("%s\n", arr[i]);
+        }
+    }
 }
 /* fgets, scanf
 TODOS:
