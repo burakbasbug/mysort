@@ -7,12 +7,12 @@
 /* VARIABLES */
 char *mysort;
 const char *OPTSTRING = "r";
-FILE *files = malloc(0);
+int numberOfLines = 0; //struct icine alinacak!
 
 /* PROTOTYPES */
 void usage(void);
-char **getFilePaths(int argc, char **argv, int optind);
-char **readLines(char **filePaths);
+char **getFilePaths(char **argv, int optind, const int numberOfPaths);
+char** readLines(char **paths, const int numberOfPaths);
 
 int main(int argc, char **argv)
 {
@@ -33,8 +33,16 @@ int main(int argc, char **argv)
 
     if (argv[optind]) //there is at lease one file name given, because optind optionlari gösterdi simdi argumenti gösteriyor.
     {
-        char **filePaths = getFilePaths(argc, argv, optind);
-        readLines(filePaths);
+        const int numberOfPaths = argc - optind; //number of positional arguments
+        char **filePaths = getFilePaths(argv, optind, numberOfPaths);
+        if(filePaths != NULL){
+            char **lines = readLines(filePaths, numberOfPaths);
+            for(int i=0;i<numberOfLines;i++){
+                printf("Line[%d]: '%s'\n",i,lines[i]);
+            }
+        }
+        
+
     }
     else
     { //no filename => stdin
@@ -50,13 +58,11 @@ void usage(void)
 }
 
 /**
- * Programa verilen pathleri array'e atar.
+ * Returns positional arguments (file paths) as an array. 
  */
-char **getFilePaths(int argc, char **argv, int optind)
+char **getFilePaths(char **argv, int optind, const int numberOfPaths)
 {
     char **filePaths;
-    int numberOfPaths = argc - optind; //number of positional arguments
-    printf("%d paths were given\n", numberOfPaths);
     if (numberOfPaths == 0)
     {
         return NULL;
@@ -66,19 +72,17 @@ char **getFilePaths(int argc, char **argv, int optind)
     for (int i = 0; i < numberOfPaths; ++i)
     {
         long sizeOfPathString = sizeof(argv[optind]);
-        //printf("Argument: %s,  sizeOfPathText: %ld\n", argv[optind], sizeOfPath);
         filePaths[i] = malloc(sizeOfPathString);
         strcpy(filePaths[i], argv[optind]); //YADA filePaths[i] = argv[optind];
-        //printf("File%d: %s\n", i, filePaths[i]);
         optind++;
     }
     return filePaths;
 }
 
 /**
- * Given paths to each file, tries to read each file. If one of the files can not be read, returns null.
+ * Given paths to each file, tries to read each file.
  */
-char** readLines(char **paths)
+char** readLines(char **paths, const int numberOfPaths)
 {
 
     if (paths == NULL || paths[0] == NULL)
@@ -86,10 +90,10 @@ char** readLines(char **paths)
         printf("bos amk");
         //return NULL;
     }
-    
-    char **lines = malloc(numberOfPaths * (char*));
-    const int NR_OF_CHARS_TO_READ = 100;
-    int numberOfPaths = sizeof(paths) / sizeof(paths[0]);
+
+    char **lines = malloc(numberOfPaths * sizeof(char *));
+    //char **lines = NULL;
+    const int NR_OF_CHARS_TO_READ = 6;
     for (int i = 0; i < numberOfPaths; ++i)
     {
         FILE *file;
@@ -99,21 +103,40 @@ char** readLines(char **paths)
             exit(EXIT_FAILURE);
         }
 
-        char* line = malloc(0);
-        char* buff = malloc(sizeof(char) * NR_OF_CHARS_TO_READ);
-        while((buff = fgets(buff, NR_OF_CHARS_TO_READ, file)) != NULL) //fgets bir satiri okumaktayken newline'a rastlarsa orada okumayi durduruyor ama newline char'i okudugu stringe dahil ediliyor.
-        {   
+        int sizeOfLine = NR_OF_CHARS_TO_READ;
+        char *line = malloc(sizeOfLine);
+        char *buff = malloc(sizeOfLine);
+        int lineCounter = 0;
+        /*
+            - fgets bir satiri okumaktayken newline'a rastlarsa orada okumayi durduruyor ama newline char'i okudugu stringe dahil ediliyor.
+            - buff'u free edemiyorum, hata veriyor.
+        */
+        while ((buff = fgets(buff, NR_OF_CHARS_TO_READ, file)) != NULL)
+        {
             int lastChar = strlen(buff) - 1;
-            if(buff[lastChar] == '\n'){
-                buff[lastChar] = '\0';
+            if (buff[lastChar] == '\n')
+            {
+                buff[lastChar] = '\0'; //satir bitti
+                strncat(line, buff, NR_OF_CHARS_TO_READ); //son parca buff da line'a eklenir
+                lines[lineCounter] = malloc(sizeOfLine); //lines'a yeni malloc
+                strncpy(lines[lineCounter], line, sizeOfLine); //line -> lines
+                
+                numberOfLines++;
+                lineCounter++;
+                sizeOfLine = NR_OF_CHARS_TO_READ;
+                line = malloc(sizeOfLine);
             }
-            line = realloc(line, sizeof(buff) + sizeof(line) + 1); //daha cok yer, icerik ayni
-            line = strncat(line, buff, NR_OF_CHARS_TO_READ); //ayrilan yere nr kadar buff
-            
+            else
+            {
+                sizeOfLine += NR_OF_CHARS_TO_READ;
+                line = realloc(line, sizeOfLine); //daha cok yer, icerik ayni
+                strncat(line, buff, NR_OF_CHARS_TO_READ);       //ayrilan yere nr kadar buff
+            }
         }
-        printf("%s", line);
         fclose(file);
     }
+
+    return lines;
 }
 
 /* fgets, scanf
@@ -130,10 +153,10 @@ TODOS:
     - exit stratejim dogru mu?
 */
 
-
 /*
 next:
-1. read:  C'de her array isleyen fonksiyona array-length verilmesinin nedeni
+1. read:  https://stackoverflow.com/questions/33047452/definitive-list-of-common-reasons-for-segmentation-faults
+1.1 and NOTE into intro.md
 2. FILE *files = malloc(0); icine acilan dosyalarin birer REFERANSINI AT ki ben baska yerde kapatsam bile acik kalmasinlar ve acik kalirlarsa da ben kapatabileyim.
 3. 
 
