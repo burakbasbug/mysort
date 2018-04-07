@@ -7,12 +7,14 @@
 /* VARIABLES */
 char *mysort;
 const char *OPTSTRING = "r";
-int numberOfLines = 0; //struct icine alinacak!
+int lineCounter = 0; //struct icine alinacak!
 
 /* PROTOTYPES */
 void usage(void);
 char **getFilePaths(char **argv, int optind, const int numberOfPaths);
-char** readLines(char **paths, const int numberOfPaths);
+char **readLines(char **paths, const int numberOfPaths);
+
+int myCompare(const void *a, const void *b);
 
 int main(int argc, char **argv)
 {
@@ -35,14 +37,15 @@ int main(int argc, char **argv)
     {
         const int numberOfPaths = argc - optind; //number of positional arguments
         char **filePaths = getFilePaths(argv, optind, numberOfPaths);
-        if(filePaths != NULL){
+        if (filePaths != NULL)
+        {
             char **lines = readLines(filePaths, numberOfPaths);
-            for(int i=0;i<numberOfLines;i++){
-                printf("Line[%d]: '%s'\n",i,lines[i]);
+            qsort(lines, lineCounter, sizeof(char *), myCompare);
+            for (int i = 0; i < lineCounter; i++)
+            {
+                printf("%s\n", lines[i]);
             }
         }
-        
-
     }
     else
     { //no filename => stdin
@@ -82,7 +85,7 @@ char **getFilePaths(char **argv, int optind, const int numberOfPaths)
 /**
  * Given paths to each file, tries to read each file.
  */
-char** readLines(char **paths, const int numberOfPaths)
+char **readLines(char **paths, const int numberOfPaths)
 {
 
     if (paths == NULL || paths[0] == NULL)
@@ -93,7 +96,7 @@ char** readLines(char **paths, const int numberOfPaths)
 
     char **lines = malloc(numberOfPaths * sizeof(char *));
     //char **lines = NULL;
-    const int NR_OF_CHARS_TO_READ = 6;
+    const int NR_OF_CHARS_TO_READ = 1022;
     for (int i = 0; i < numberOfPaths; ++i)
     {
         FILE *file;
@@ -103,34 +106,23 @@ char** readLines(char **paths, const int numberOfPaths)
             exit(EXIT_FAILURE);
         }
 
-        int sizeOfLine = NR_OF_CHARS_TO_READ;
-        char *line = malloc(sizeOfLine);
-        char *buff = malloc(sizeOfLine);
-        int lineCounter = 0;
-        /*
-            - fgets bir satiri okumaktayken newline'a rastlarsa orada okumayi durduruyor ama newline char'i okudugu stringe dahil ediliyor.
-            - buff'u free edemiyorum, hata veriyor.
-        */
-        while ((buff = fgets(buff, NR_OF_CHARS_TO_READ, file)) != NULL)
+        char *buff = malloc(NR_OF_CHARS_TO_READ);
+        while (feof(file) || (buff = fgets(buff, NR_OF_CHARS_TO_READ, file)) != NULL)
         {
-            int lastChar = strlen(buff) - 1;
-            if (buff[lastChar] == '\n')
+
+            if (!feof(file))
             {
+                int lastChar = strlen(buff) - 1;
                 buff[lastChar] = '\0'; //satir bitti
-                strncat(line, buff, NR_OF_CHARS_TO_READ); //son parca buff da line'a eklenir
-                lines[lineCounter] = malloc(sizeOfLine); //lines'a yeni malloc
-                strncpy(lines[lineCounter], line, sizeOfLine); //line -> lines
-                
-                numberOfLines++;
-                lineCounter++;
-                sizeOfLine = NR_OF_CHARS_TO_READ;
-                line = malloc(sizeOfLine);
             }
-            else
+
+            lines[lineCounter] = malloc(NR_OF_CHARS_TO_READ);       //lines'a yeni malloc
+            strncpy(lines[lineCounter], buff, NR_OF_CHARS_TO_READ); //line -> lines
+            lineCounter++;
+
+            if (feof(file))
             {
-                sizeOfLine += NR_OF_CHARS_TO_READ;
-                line = realloc(line, sizeOfLine); //daha cok yer, icerik ayni
-                strncat(line, buff, NR_OF_CHARS_TO_READ);       //ayrilan yere nr kadar buff
+                break;
             }
         }
         fclose(file);
@@ -138,7 +130,13 @@ char** readLines(char **paths, const int numberOfPaths)
 
     return lines;
 }
+int myCompare(const void *a, const void *b)
+{
+    const char *pa = *(const char **)a;
+    const char *pb = *(const char **)b;
 
+    return strcmp(pa, pb);
+}
 /* fgets, scanf
 TODOS:
 - man 3 exit !!!! !!! !!!! COOOK ÖNEMLI
@@ -158,6 +156,6 @@ next:
 1. read:  https://stackoverflow.com/questions/33047452/definitive-list-of-common-reasons-for-segmentation-faults
 1.1 and NOTE into intro.md
 2. FILE *files = malloc(0); icine acilan dosyalarin birer REFERANSINI AT ki ben baska yerde kapatsam bile acik kalmasinlar ve acik kalirlarsa da ben kapatabileyim.
-3. 
+3. FGETS + STDIN : https://stackoverflow.com/questions/3919009/how-to-read-from-stdin-with-fgets
 
 */
