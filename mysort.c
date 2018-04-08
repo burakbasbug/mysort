@@ -26,8 +26,7 @@ int main(int argc, char **argv)
         switch (opt)
         {
         case 'r':
-            opt_r++;
-            printf("R : %d\n", opt_r);
+            opt_r++; // must be the first in argument list
             break;
         default:
             usage();
@@ -55,7 +54,7 @@ int main(int argc, char **argv)
 
 void usage(void)
 {
-    fprintf(stderr, "Usage: %s [-r] [file1 ...]\n", mysort);
+    fprintf(stderr, "Usage: %s [-r] [file1] ...\n", mysort);
     exit(EXIT_FAILURE);
 }
 
@@ -69,13 +68,13 @@ char **getFilePaths(char **argv, int optind, const int numberOfPaths)
     {
         return NULL;
     }
-    filePaths = malloc(numberOfPaths * sizeof(char *)); //path sayisi * char-POINTER-size'i, string size'i degil !!! o pointerlarin gösterdigi noktaya ayrica memory atayacagim!!
+    filePaths = malloc(numberOfPaths * sizeof(char *));
 
     for (int i = 0; i < numberOfPaths; ++i)
     {
         long sizeOfPathString = sizeof(argv[optind]);
         filePaths[i] = malloc(sizeOfPathString);
-        strcpy(filePaths[i], argv[optind]); //YADA filePaths[i] = argv[optind];
+        strcpy(filePaths[i], argv[optind]);
         optind++;
     }
     return filePaths;
@@ -86,48 +85,40 @@ char **getFilePaths(char **argv, int optind, const int numberOfPaths)
  */
 char **readLines(char **paths, const int numberOfPaths)
 {
-
-    if (paths == NULL || paths[0] == NULL)
-    {
-        printf("bos amk");
-        //return NULL;
-    }
-
     char **lines = malloc(numberOfPaths * sizeof(char *));
-    //char **lines = NULL;
     for (int i = 0; i < numberOfPaths; ++i)
     {
-        FILE *file;
-        if ((file = fopen(paths[i], "r")) == NULL) //null if EOF
+    	FILE *file = NULL;
+        if ((file = fopen(paths[i], "r")) == NULL)
         {
-            fprintf(stderr, "[%s] ERROR: fopen failed: %s\n", mysort, strerror(errno));
+            fprintf(stderr, "[%s] ERROR: fopen for file '%s' failed: %s\n", mysort,paths[i] ,strerror(errno));
             exit(EXIT_FAILURE);
         }
-
         char *buff = malloc(BUFFER_SIZE);
-        while (feof(file) || (buff = fgets(buff, BUFFER_SIZE, file)) != NULL)
+        while (feof(file) || fgets(buff, BUFFER_SIZE, file) != NULL)
         {
-
             if (!feof(file))
             {
                 int lastChar = strlen(buff) - 1;
-                buff[lastChar] = '\0'; //satir bitti
+                buff[lastChar] = '\0';
             }
-
-            lines[lineCounter] = malloc(BUFFER_SIZE);       //lines'a yeni malloc
-            strncpy(lines[lineCounter], buff, BUFFER_SIZE); //line -> lines
+            lines[lineCounter] = malloc(BUFFER_SIZE);
+            strncpy(lines[lineCounter], buff, BUFFER_SIZE);
             lineCounter++;
-
             if (feof(file))
             {
+            	if(file != NULL){
+            		fclose(file);
+            		file = NULL;
+            	}
                 break;
             }
         }
-        fclose(file);
+        free(buff);
     }
-
     return lines;
 }
+
 int myCompare(const void *a, const void *b)
 {
     const char *pa = *(const char **)a;
