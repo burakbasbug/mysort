@@ -47,7 +47,20 @@ int main(int argc, char **argv)
     }
     else
     { //no filename => stdin
-        usage();
+
+        char *line = NULL;
+        size_t size;
+        int length = 0;
+        while ((length = getline(&line, &size, stdin)) != -1) {
+            if(line[length-1] == '\n'){
+                line[length-1] = '\0';
+            }
+            printf("%s\n", line);
+
+            lineCounter++;
+        }
+        free(line);
+        //usage();
     }
     return EXIT_SUCCESS;
 }
