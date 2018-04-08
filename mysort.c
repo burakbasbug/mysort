@@ -57,7 +57,7 @@ int main(int argc, char **argv)
             if(line[length-1] == '\n'){
                 line[length-1] = '\0';
             }
-            lines = realloc(lines, lineCounter+1);
+            lines = realloc(lines, (lineCounter+1) * sizeof(char*));
             lines[lineCounter] = malloc(size * sizeof(char*));
             strncpy(lines[lineCounter], line, size); 
             lineCounter++;
@@ -108,36 +108,30 @@ char **getFilePaths(char **argv, int optind, const int numberOfPaths)
  */
 char **readLines(char **paths, const int numberOfPaths)
 {
-    char **lines = malloc(numberOfPaths * sizeof(char *));
+    char **lines = malloc(0);
     for (int i = 0; i < numberOfPaths; ++i)
     {
-    	FILE *file = NULL;
+        FILE *file;
         if ((file = fopen(paths[i], "r")) == NULL)
         {
             fprintf(stderr, "[%s] ERROR: fopen for file '%s' failed: %s\n", mysort,paths[i] ,strerror(errno));
             exit(EXIT_FAILURE);
         }
-        char *buff = malloc(BUFFER_SIZE);
-        while (feof(file) || fgets(buff, BUFFER_SIZE, file) != NULL)
-        {
-            if (!feof(file))
-            {
-                int lastChar = strlen(buff) - 1;
-                buff[lastChar] = '\0';
+
+        char *line = NULL;
+        size_t size;
+        int length = 0;
+        while ((length = getline(&line, &size, file)) != -1) {
+            if(line[length-1] == '\n'){
+                line[length-1] = '\0';
             }
-            lines[lineCounter] = malloc(BUFFER_SIZE);
-            strncpy(lines[lineCounter], buff, BUFFER_SIZE);
+            printf("Line: '%s\n", line);
+            lines = realloc(lines, (lineCounter+1) * sizeof(char*));
+            lines[lineCounter] = malloc(size * sizeof(char*));
+            strncpy(lines[lineCounter], line, size); 
             lineCounter++;
-            if (feof(file))
-            {
-            	if(file != NULL){
-            		fclose(file);
-            		file = NULL;
-            	}
-                break;
-            }
         }
-        free(buff);
+        fclose(file);
     }
     return lines;
 }
