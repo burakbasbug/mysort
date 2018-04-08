@@ -34,20 +34,22 @@ int main(int argc, char **argv)
         }
     }
 
+    char** lines = malloc(0);
     if (argv[optind]) //there is at lease one file name given, because optind optionlari gösterdi simdi argumenti gösteriyor.
     {
         const int numberOfPaths = argc - optind; //number of positional arguments
         char **filePaths = getFilePaths(argv, optind, numberOfPaths);
         if (filePaths != NULL)
         {
-            char **lines = readLines(filePaths, numberOfPaths);
-            qsort(lines, lineCounter, sizeof(char *), myCompare);
-            printArray(lines, lineCounter, opt_r);
+            lines = readLines(filePaths, numberOfPaths);
+            for(int i = 0; i<numberOfPaths; i++){
+                free(filePaths[i]);
+            }
+            free(filePaths);
         }
     }
     else
     { //no filename => stdin
-
         char *line = NULL;
         size_t size;
         int length = 0;
@@ -55,13 +57,21 @@ int main(int argc, char **argv)
             if(line[length-1] == '\n'){
                 line[length-1] = '\0';
             }
-            printf("%s\n", line);
-
+            lines = realloc(lines, lineCounter+1);
+            lines[lineCounter] = malloc(size * sizeof(char*));
+            strncpy(lines[lineCounter], line, size); 
             lineCounter++;
         }
         free(line);
-        //usage();
     }
+    qsort(lines, lineCounter, sizeof(char *), myCompare);
+    printArray(lines, lineCounter, opt_r);
+    
+    for(int i = 0; i<lineCounter; i++){
+        free(lines[i]);
+    }
+    free(lines);
+
     return EXIT_SUCCESS;
 }
 
@@ -159,21 +169,22 @@ void printArray(char** arr, const int size, const int isReverse){
 TODOS:
 - man 3 exit !!!! !!! !!!! COOOK ÖNEMLI
 - tüm metotlar icin errno var mi kontrol!! Varsa errno'lu satir eklenecek.
-- synopsis icin man sort!
-- makefile check! foliede her asamada ayni parametreleri kullaniyor.
 - General Guidelines CHECK
 - close resources + close resources in case ERROR
 - tutorlara sormak icin bölüm bölüm kesin sorular hazirla, whole-code-check yapmayacaklar.
-    - free yapilmasi gereken malloc var mi?
-    - realloclar dogru mu?
     - exit stratejim dogru mu?
+    - makefile'im dogru mu
+    - test dosyalarim / caselerim yeterli mi?
+    - 
 */
 
 /*
 next:
-1. read:  https://stackoverflow.com/questions/33047452/definitive-list-of-common-reasons-for-segmentation-faults
-1.1 and NOTE into intro.md
-2. FILE *files = malloc(0); icine acilan dosyalarin birer REFERANSINI AT ki ben baska yerde kapatsam bile acik kalmasinlar ve acik kalirlarsa da ben kapatabileyim.
-3. FGETS + STDIN : https://stackoverflow.com/questions/3919009/how-to-read-from-stdin-with-fgets
+0. read:  https://stackoverflow.com/questions/33047452/definitive-list-of-common-reasons-for-segmentation-faults
+1. man 3 getline = GETLINE'I YALAYIP YUT!!
 
+
+status: 
+- (macde) stdin ile bazen segmentation fault 11 veriyor
+- (serverda) dosya kapatma sorunlu.
 */
