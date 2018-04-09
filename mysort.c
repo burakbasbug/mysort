@@ -32,7 +32,7 @@ int main(int argc, char **argv)
             switch (opt)
             {
             case 'r':
-                opt_r++; // must be the first in argument list
+                opt_r++;
                 break;
             default:
                 usage();
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     }
 
     char **lines = malloc(0);
-    if (numberOfPaths) //there is at lease one file name given, because optind optionlari gösterdi simdi argumenti gösteriyor.
+    if (numberOfPaths)
     {
         lines = readLines(filePaths, numberOfPaths);
         for (int i = 0; i < numberOfPaths; i++)
@@ -162,19 +162,10 @@ void printArray(char **arr, const int size, const int isReverse)
 }
 /* fgets, scanf
 TODOS:
-- man 3 exit !!!! !!! !!!! COOOK ÖNEMLI
-- tüm metotlar icin errno var mi kontrol!! Varsa errno'lu satir eklenecek.
 - General Guidelines CHECK
-- close resources + close resources in case ERROR
 - tutorlara sormak icin bölüm bölüm kesin sorular hazirla, whole-code-check yapmayacaklar.
     - exit stratejim dogru mu?
     - makefile'im dogru mu
     - test dosyalarim / caselerim yeterli mi?
-    - 
-
-status: 
-- macde ve serverda calisiyor ama server su anda hic biseyi calistirmiyor.
-- 1021, 1022 ve 1023 karakterli txt'ler ile ve birer harfli txtler ve yüzlerce bos satirli txtler ve bombos/bozuk txt ile test.
-- hizlica dokumentation ve abgabede silincek notlari yaz ve client-server isine basla.
-- - files/sockets ve diger en son folieler iyi. folieleri tekrar et.
+    - dosya siniri koymali miyim ? kac dosya alabilmeli ?
 */
