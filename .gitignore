@@ -1,1 +1,5 @@
-*.o
+src/*.o
+.DS_Store
+doc/html/
+doc/latex/
+

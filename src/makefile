@@ -1,3 +1,8 @@
+# @file Makefile
+# @author Burak Basbug, 1029465
+# @brief Makefile for the sources mysort.c
+# @date 2018-03-15
+
 CC=gcc
 DEFS=-D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE -D_POSIX_C_SOURCE=200809L
 CFLAGS=-Wall -g -std=c99 -pedantic $(DEFS)

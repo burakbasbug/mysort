@@ -1,24 +1,44 @@
+/**
+ * @file mysort.c
+ * @author Burak Basbug, 1029465
+ * @date 2018-03-15
+ * @brief Line sorting program for OSUE exercise 1A `mysort'.
+ * @details Similar to sort, it takes files as parameter or reads from stdin and sorts 
+ * given lines.
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
+/** Maximum allowed length of a path */
 #define PATH_MAX 4096
 
 /* VARIABLES */
-char *mysort;
-char **filePaths;
-const char *OPTSTRING = "r";
-int lineCounter = 0;
-int numberOfPaths = 0;
+static char *mysort; /**< The program name */
+static char **filePaths; /**< A list to storage the paths of files to sort their lines */
+static const char *OPTSTRING = "r"; /**< The option string */
+static int lineCounter = 0; /**< Counter for the read lines */
+static int numberOfPaths = 0; /**< Counter for the read paths */
 
 /* PROTOTYPES */
-void usage(void);
-char **readLines(char **paths, const int numberOfPaths);
-int myCompare(const void *a, const void *b);
-void printArray(char **arr, const int size, const int isReverse);
+static void usage(void);
+static char **readLines(char **paths, const int numberOfPaths);
+static int myCompare(const void *a, const void *b);
+static void printArray(char **arr, const int size, const int isReverse);
 
+/**
+ * @brief It reads lines from the input, sorts and prints them into stdout.
+ * @details This method parses given arguments and options to the program,
+ * validates and saves them for other methods. If given arguments and options are valid, 
+ * it reads lines either from (if given) files or from stdin.
+ * global variables: mysort filePaths numberOfPaths lineCounter OPTSTRING
+ * @param argc The argument counter.
+ * @param argv The argument vector.
+ * @return Returns EXIT_SUCCESS, if process executed successfully.
+ */
 int main(int argc, char **argv)
 {
     mysort = argv[0];
@@ -36,7 +56,7 @@ int main(int argc, char **argv)
                 break;
             default:
                 usage();
-                return EXIT_FAILURE;
+                break;
             }
         }
 
@@ -91,20 +111,36 @@ int main(int argc, char **argv)
         free(lines[i]);
     }
     free(lines);
-
     return EXIT_SUCCESS;
 }
 
-void usage(void)
+
+
+/* Implementations */
+
+/**
+ * @brief Prints the synopsis and leaves the program.
+ * @details Prints the synopsis and leaves the program with EXIT_FAILURE.
+ * global variables: prog_name
+ */
+static void usage(void)
 {
     fprintf(stderr, "Usage: %s [-r] [file1] ...\n", mysort);
     exit(EXIT_FAILURE);
 }
 
 /**
- * Given paths to each file, tries to read each file.
+ * @brief Given paths to each file, reads each file.
+ * @details It reads each file given in the parameter, reads each of these paths 
+ * and saves each line of each file into lines pointer. After each iteration the file
+ * will be closed. If a path is invalid, the execution stops and method exists with 
+ * EXIT_FAILURE. 
+ * global variables: numberOfPaths 
+ * @param paths A pointer, which contains paths to read.
+ * @param numberOfPaths Indicated the number of paths to read.
+ * @return A pointer, which contains all of the lines from given list of files.
  */
-char **readLines(char **paths, const int numberOfPaths)
+static char **readLines(char **paths, const int numberOfPaths)
 {
     char **lines = malloc(0);
     for (int i = 0; i < numberOfPaths; ++i)
@@ -135,7 +171,15 @@ char **readLines(char **paths, const int numberOfPaths)
     return lines;
 }
 
-int myCompare(const void *a, const void *b)
+/**
+ * @brief Compares strings.
+ * @details This method uses strcmp function of C Library. 
+ * Given two strings, this method compares them and returns an integer indicator. See 'man 3 strcmp'.
+ * @param a String to compare.
+ * @param b String to compare.
+ * @return An integer indicator for the result of comparison.
+ */
+static int myCompare(const void *a, const void *b)
 {
     const char *pa = *(const char **)a;
     const char *pb = *(const char **)b;
@@ -143,7 +187,15 @@ int myCompare(const void *a, const void *b)
     return strcmp(pa, pb);
 }
 
-void printArray(char **arr, const int size, const int isReverse)
+/**
+ * @brief Prints given array to stdout.
+ * @details Given a string array, it prints elements of this array into the
+ * stdout either in ascending or descending order.
+ * @param arr String array to print to the stdout.
+ * @param size Size of given string array.
+ * @param isReverse Indicator for the printing order of array.
+ */
+static void printArray(char **arr, const int size, const int isReverse)
 {
     if (isReverse)
     {
@@ -160,12 +212,4 @@ void printArray(char **arr, const int size, const int isReverse)
         }
     }
 }
-/* fgets, scanf
-TODOS:
-- General Guidelines CHECK
-- tutorlara sormak icin bölüm bölüm kesin sorular hazirla, whole-code-check yapmayacaklar.
-    - exit stratejim dogru mu?
-    - makefile'im dogru mu
-    - test dosyalarim / caselerim yeterli mi?
-    - dosya siniri koymali miyim ? kac dosya alabilmeli ?
-*/
+
